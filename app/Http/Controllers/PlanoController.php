@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Plano;
 use Illuminate\Http\Request;
 
+
 class PlanoController extends Controller
 {
     // LISTAR TODOS OS PLANOS
@@ -65,3 +66,4 @@ class PlanoController extends Controller
         ]);
     }
 }
+

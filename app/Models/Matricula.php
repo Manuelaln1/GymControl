@@ -23,6 +23,4 @@ class Matricula extends Model
     {
         return $this->belongsTo(Plano::class);
     }
-    
 }
-

@@ -9,40 +9,45 @@ class ProgressoController extends Controller
 {
     public function index()
     {
-        return Progresso::with(
-            'aluno',
-            'professor'
-        )->get();
+        return Progresso::with('aluno')->get();
     }
 
     public function show($id)
     {
-        return Progresso::with(
-            'aluno',
-            'professor'
-        )->findOrFail($id);
+        return Progresso::with('aluno')->findOrFail($id);
     }
 
-    public function store(Request $request)
-    {
-        return Progresso::create($request->all());
-    }
+
+public function store(Request $request)
+{
+    $data = $request->validate([
+        'user_id' => 'required',
+        'peso_kg' => 'nullable',
+        'gordura_corporal_pct' => 'nullable',
+        'massa_muscular_kg' => 'nullable',
+        'observacoes' => 'nullable',
+        'avaliado_em' => 'required|date',
+    ]);
+
+    $data['professor_id'] = 1;
+
+    Progresso::create($data);
+
+    return response()->json(['ok' => true]);
+}
 
     public function update(Request $request, $id)
     {
-        $progresso = Progresso::findOrFail($id);
+        $p = Progresso::findOrFail($id);
+        $p->update($request->all());
 
-        $progresso->update($request->all());
-
-        return $progresso;
+        return $p;
     }
 
     public function destroy($id)
     {
         Progresso::findOrFail($id)->delete();
 
-        return response()->json([
-            'message' => 'Progresso removido'
-        ]);
+        return response()->json(['message' => 'Removido']);
     }
 }

@@ -14,30 +14,29 @@ class FrequenciaController extends Controller
 
     public function show($id)
     {
-        return Frequencia::with('user')
-            ->findOrFail($id);
+        return Frequencia::with('user')->findOrFail($id);
     }
 
     public function store(Request $request)
     {
-        return Frequencia::create($request->all());
+        return Frequencia::create([
+            'user_id' => $request->user_id,
+            'entrada' => now()
+        ]);
     }
 
     public function update(Request $request, $id)
     {
-        $frequencia = Frequencia::findOrFail($id);
+        $f = Frequencia::findOrFail($id);
+        $f->update($request->all());
 
-        $frequencia->update($request->all());
-
-        return $frequencia;
+        return $f;
     }
 
     public function destroy($id)
     {
         Frequencia::findOrFail($id)->delete();
 
-        return response()->json([
-            'message' => 'Frequência removida'
-        ]);
+        return response()->json(['message' => 'ok']);
     }
 }

@@ -8,7 +8,6 @@ class Treino extends Model
 {
     protected $fillable = [
         'user_id',
-        'professor_id',
         'nome',
         'objetivo',
         'observacoes',
@@ -16,18 +15,11 @@ class Treino extends Model
         'ativo'
     ];
 
-    public function aluno()
+    // 🔥 ESSA É A RELAÇÃO QUE ESTAVA FALTANDO
+    public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
-    public function professor()
-    {
-        return $this->belongsTo(User::class, 'professor_id');
-    }
 
-    public function treinoExercicios()
-    {
-        return $this->hasMany(TreinoExercicio::class);
-    }
 }
