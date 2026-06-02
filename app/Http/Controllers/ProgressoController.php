@@ -21,7 +21,7 @@ class ProgressoController extends Controller
 public function store(Request $request)
 {
     $data = $request->validate([
-        'user_id' => 'required',
+        'user_id' => 'required|exists:users,id',
         'peso_kg' => 'nullable',
         'gordura_corporal_pct' => 'nullable',
         'massa_muscular_kg' => 'nullable',
@@ -39,7 +39,14 @@ public function store(Request $request)
     public function update(Request $request, $id)
     {
         $p = Progresso::findOrFail($id);
-        $p->update($request->all());
+        $p->update($request->validate([
+            'user_id' => 'required|exists:users,id',
+            'peso_kg' => 'nullable',
+            'gordura_corporal_pct' => 'nullable',
+            'massa_muscular_kg' => 'nullable',
+            'observacoes' => 'nullable',
+            'avaliado_em' => 'required|date',
+        ]));
 
         return $p;
     }

@@ -182,6 +182,21 @@
         }
         .gym-input:focus { border-color: var(--gym-accent) !important; box-shadow: 0 0 0 3px rgba(200,241,53,.12) !important; outline: none; }
         .gym-input option { background: var(--gym-surface2); }
+        .aluno-autocomplete { position: relative; }
+        .aluno-autocomplete-list {
+            display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+            z-index: 1060; max-height: 190px; overflow-y: auto;
+            background: var(--gym-surface2); border: 1px solid var(--gym-border);
+            border-radius: 8px; box-shadow: 0 10px 24px rgba(0,0,0,.3);
+        }
+        .aluno-autocomplete-list.show { display: block; }
+        .aluno-autocomplete-item {
+            width: 100%; padding: 9px 12px; border: 0; border-bottom: 1px solid var(--gym-border);
+            background: transparent; color: var(--gym-text); text-align: left; font-size: 13px;
+        }
+        .aluno-autocomplete-item:last-child { border-bottom: 0; }
+        .aluno-autocomplete-item:hover, .aluno-autocomplete-item:focus { background: rgba(200,241,53,.1); color: var(--gym-accent); outline: none; }
+        .aluno-autocomplete-empty { padding: 9px 12px; color: var(--gym-muted); font-size: 13px; }
 
         /* ── MODALS ── */
         .gym-modal .modal-content { background: var(--gym-surface); border: 1px solid var(--gym-border); border-radius: 14px; color: var(--gym-text); }
@@ -238,9 +253,6 @@
         <div class="sidebar-section">Treinos</div>
         <a href="{{ route('admin.treinos.index') }}" class="sidebar-link {{ request()->routeIs('admin.treinos*') ? 'active' : '' }}">
             <i class="bi bi-clipboard-check-fill"></i> Treinos
-        </a>
-        <a href="{{ route('admin.exercicios.index') }}" class="sidebar-link {{ request()->routeIs('admin.exercicios*') ? 'active' : '' }}">
-            <i class="bi bi-activity"></i> Exercícios
         </a>
         <a href="{{ route('admin.progresso.index') }}" class="sidebar-link {{ request()->routeIs('admin.progresso*') ? 'active' : '' }}">
             <i class="bi bi-graph-up-arrow"></i> Progresso
@@ -320,6 +332,61 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    let alunosMatriculados = [];
+
+    async function loadAlunosAutocomplete() {
+        alunosMatriculados = await fetch('/api/alunos-matriculados').then(r => r.json()).catch(() => []);
+        document.querySelectorAll('[data-aluno-autocomplete]').forEach(renderAlunoAutocomplete);
+    }
+
+    function normalizarTexto(texto) {
+        return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    }
+
+    function renderAlunoAutocomplete(input) {
+        const list = input.parentElement.querySelector('.aluno-autocomplete-list');
+        if (!list) return;
+
+        const termo = normalizarTexto(input.value);
+        const matches = alunosMatriculados.filter(aluno => normalizarTexto(aluno.name).includes(termo));
+        list.innerHTML = '';
+
+        if (!matches.length) {
+            const empty = document.createElement('div');
+            empty.className = 'aluno-autocomplete-empty';
+            empty.textContent = 'Nenhum aluno encontrado';
+            list.appendChild(empty);
+        }
+
+        matches.forEach(aluno => {
+            const option = document.createElement('button');
+            option.type = 'button';
+            option.className = 'aluno-autocomplete-item';
+            option.textContent = aluno.name;
+            option.addEventListener('mousedown', event => {
+                event.preventDefault();
+                input.value = aluno.name;
+                list.classList.remove('show');
+            });
+            list.appendChild(option);
+        });
+
+        list.classList.add('show');
+    }
+
+    function alunoIdPorNome(inputId) {
+        const nome = normalizarTexto(document.getElementById(inputId).value);
+        const aluno = alunosMatriculados.find(item => normalizarTexto(item.name) === nome);
+        if (!aluno) showToast('Selecione um aluno matriculado pelo nome.', 'error');
+        return aluno ? aluno.id : null;
+    }
+
+    document.querySelectorAll('[data-aluno-autocomplete]').forEach(input => {
+        input.addEventListener('focus', () => renderAlunoAutocomplete(input));
+        input.addEventListener('input', () => renderAlunoAutocomplete(input));
+        input.addEventListener('blur', () => setTimeout(() => input.parentElement.querySelector('.aluno-autocomplete-list')?.classList.remove('show'), 100));
+    });
+
     // Mobile sidebar overlay
     document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
         const open = document.getElementById('sidebar').classList.contains('open');
@@ -349,6 +416,8 @@
         const ativos = data.filter ? data.filter(m => m.status === 'ativo').length : data.length;
         document.getElementById('badge-matriculas').textContent = ativos || data.length || 0;
     }).catch(() => { document.getElementById('badge-matriculas').textContent = ''; });
+
+    loadAlunosAutocomplete();
 </script>
 
 @stack('scripts')

@@ -54,7 +54,7 @@
     <div class="item">
         <div class="label">Aluno</div>
         <div class="value">
-            {{ $treino->aluno->name ?? '—' }}
+            {{ $treino->user->name ?? '—' }}
         </div>
     </div>
 

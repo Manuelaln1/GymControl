@@ -35,11 +35,6 @@ class User extends Authenticatable
         return $this->hasMany(Treino::class);
     }
 
-    public function treinosComoProfessor()
-    {
-        return $this->hasMany(Treino::class, 'professor_id');
-    }
-
     public function progresso()
     {
         return $this->hasMany(Progresso::class);

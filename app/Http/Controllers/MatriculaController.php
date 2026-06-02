@@ -9,100 +9,85 @@ use Illuminate\Support\Str;
 
 class MatriculaController extends Controller
 {
-    // LISTAR MATRÍCULAS
     public function index()
     {
         return Matricula::with('user', 'plano')->get();
     }
 
-    // MOSTRAR MATRÍCULA
     public function show($id)
     {
         return Matricula::with('user', 'plano')->findOrFail($id);
     }
 
-    // CRIAR MATRÍCULA + CRIAR ALUNO SE NÃO EXISTIR
-   public function store(Request $request)
-{
-    try {
-
-        if ($request->user_id) {
-
-        $user = User::find($request->user_id);
-
-    } else {
-
-        $user = User::create([
-            'name' => $request->nome,
-            'email' => Str::slug($request->nome) . rand(1000,9999) . '@gym.com',
-            'password' => bcrypt('123456'),
-            'tipo' => 'aluno'
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'nome' => 'required|string|max:255',
+            'plano_id' => 'required|exists:planos,id',
+            'data_inicio' => 'required|date',
+            'data_fim' => 'required|date|after_or_equal:data_inicio',
+            'status' => 'required|string|max:255',
         ]);
-    }
+
+        $nome = trim($data['nome']);
+        $user = User::where('name', $nome)->first();
+
+        if (!$user) {
+            $user = User::create([
+                'name' => $nome,
+                'email' => Str::slug($nome).'-'.Str::lower(Str::random(8)).'@gym.local',
+                'password' => bcrypt(Str::random(32)),
+                'tipo' => 'aluno',
+            ]);
+        }
 
         $matricula = Matricula::create([
             'user_id' => $user->id,
-            'plano_id' => $request->plano_id,
-            'data_inicio' => $request->data_inicio,
-            'data_fim' => $request->data_fim,
-            'status' => $request->status
+            'plano_id' => $data['plano_id'],
+            'data_inicio' => $data['data_inicio'],
+            'data_fim' => $data['data_fim'],
+            'status' => $data['status'],
         ]);
 
         return response()->json([
             'success' => true,
-            'matricula' => $matricula
+            'matricula' => $matricula->load('user', 'plano'),
+        ], 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $data = $request->validate([
+            'nome' => 'required|string|max:255',
+            'plano_id' => 'required|exists:planos,id',
+            'data_inicio' => 'required|date',
+            'data_fim' => 'required|date|after_or_equal:data_inicio',
+            'status' => 'required|string|max:255',
         ]);
 
-    } catch (\Exception $e) {
+        $matricula = Matricula::findOrFail($id);
+        $matricula->update($data);
+        $matricula->user->update(['name' => trim($data['nome'])]);
+
         return response()->json([
-            'success' => false,
-            'error' => $e->getMessage()
-        ]);
-    }
-}
-    // ATUALIZAR
-   public function update(Request $request, $id)
-{
-    $matricula = Matricula::findOrFail($id);
-
-    $matricula->update([
-        'plano_id' => $request->plano_id,
-        'data_inicio' => $request->data_inicio,
-        'data_fim' => $request->data_fim,
-        'status' => $request->status
-    ]);
-
-    // Atualiza o nome do aluno
-    if ($matricula->user && $request->nome) {
-        $matricula->user->update([
-            'name' => $request->nome
+            'success' => true,
+            'matricula' => $matricula->load('user', 'plano'),
         ]);
     }
 
-    return response()->json([
-        'success' => true,
-        'matricula' => $matricula->load('user', 'plano')
-    ]);
-}
-
-    // DELETAR
     public function destroy($id)
     {
         Matricula::findOrFail($id)->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Matrícula removida'
-        ]);
+        return response()->json(['success' => true]);
     }
 
-    // LISTAR ALUNOS
     public function alunosMatriculados()
     {
-        return Matricula::with('user')
+        return Matricula::with('user:id,name')
             ->whereNotNull('user_id')
             ->get()
-            ->map(fn($m) => $m->user)
+            ->map(fn ($matricula) => $matricula->user)
             ->filter()
             ->unique('id')
             ->values();

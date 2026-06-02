@@ -178,7 +178,7 @@
                 </div>
                 <div class="hero-stats">
                     <div>
-                        <div class="hero-stat-num">7</div>
+                        <div class="hero-stat-num">5</div>
                         <div class="hero-stat-label">Módulos</div>
                     </div>
                     <div style="width:1px;background:var(--border)"></div>
@@ -240,8 +240,7 @@
             @php
                 $features = [
                     ['bi-people-fill','Gestão de Alunos','Cadastre e gerencie todos os alunos com suas matrículas, planos e histórico completo.'],
-                    ['bi-clipboard-check-fill','Treinos Personalizados','Monte treinos específicos para cada aluno com exercícios detalhados e objetivos definidos.'],
-                    ['bi-activity','Biblioteca de Exercícios','Catálogo completo de exercícios com grupo muscular, equipamento e descrição detalhada.'],
+                    ['bi-clipboard-check-fill','Treinos Personalizados','Monte treinos específicos para cada aluno com objetivos bem definidos.'],
                     ['bi-graph-up-arrow','Acompanhamento de Progresso','Registre peso, gordura corporal e massa muscular para acompanhar a evolução do aluno.'],
                     ['bi-tag-fill','Planos Flexíveis','Crie planos com preços e durações personalizadas para diferentes perfis de alunos.'],
                     ['bi-calendar-check-fill','Controle de Frequência','Registre e visualize a frequência dos alunos com histórico completo de presença.'],
@@ -342,7 +341,6 @@
             </div>
             <div class="col-6 col-lg-2">
                 <div class="footer-heading">Admin</div>
-                <a href="{{ route('admin.exercicios.index') }}" class="footer-link">Exercícios</a>
                 <a href="{{ route('admin.progresso.index') }}" class="footer-link">Progresso</a>
                 <a href="{{ route('admin.frequencias.index') }}" class="footer-link">Frequências</a>
             </div>

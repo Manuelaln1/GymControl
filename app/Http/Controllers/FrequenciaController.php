@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Frequencia;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class FrequenciaController extends Controller
 {
@@ -19,18 +20,24 @@ class FrequenciaController extends Controller
 
     public function store(Request $request)
     {
+        $data = $this->validateFrequencia($request);
+
         return Frequencia::create([
-            'user_id' => $request->user_id,
-            'entrada' => now()
+            'user_id' => $data['user_id'],
+            'entrada' => isset($data['data']) ? Carbon::parse($data['data'])->startOfDay() : now(),
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        $f = Frequencia::findOrFail($id);
-        $f->update($request->all());
+        $data = $this->validateFrequencia($request);
+        $frequencia = Frequencia::findOrFail($id);
+        $frequencia->update([
+            'user_id' => $data['user_id'],
+            'entrada' => isset($data['data']) ? Carbon::parse($data['data'])->startOfDay() : $frequencia->entrada,
+        ]);
 
-        return $f;
+        return $frequencia;
     }
 
     public function destroy($id)
@@ -38,5 +45,13 @@ class FrequenciaController extends Controller
         Frequencia::findOrFail($id)->delete();
 
         return response()->json(['message' => 'ok']);
+    }
+
+    private function validateFrequencia(Request $request): array
+    {
+        return $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'data' => 'nullable|date',
+        ]);
     }
 }
