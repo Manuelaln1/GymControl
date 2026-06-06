@@ -4,57 +4,72 @@ namespace App\Http\Controllers;
 
 use App\Models\Progresso;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ProgressoController extends Controller
 {
     public function index()
     {
-        return Progresso::with('aluno')->get();
+        return Progresso::with('aluno')
+            ->where('academia_id', $this->academiaId())
+            ->latest('avaliado_em')
+            ->latest('id')
+            ->get();
     }
 
     public function show($id)
     {
-        return Progresso::with('aluno')->findOrFail($id);
+        return $this->progressoDaAcademia()->findOrFail($id);
     }
 
 
-public function store(Request $request)
-{
-    $data = $request->validate([
-        'user_id' => 'required|exists:users,id',
-        'peso_kg' => 'nullable',
-        'gordura_corporal_pct' => 'nullable',
-        'massa_muscular_kg' => 'nullable',
-        'observacoes' => 'nullable',
-        'avaliado_em' => 'required|date',
-    ]);
+    public function store(Request $request)
+    {
+        $data = $this->validateProgresso($request);
+        $data['academia_id'] = $this->academiaId();
+        $data['professor_id'] = auth()->id();
 
-    $data['professor_id'] = 1;
+        $progresso = Progresso::create($data);
 
-    Progresso::create($data);
-
-    return response()->json(['ok' => true]);
-}
+        return response()->json([
+            'ok' => true,
+            'progresso' => $progresso->load('aluno'),
+        ], 201);
+    }
 
     public function update(Request $request, $id)
     {
-        $p = Progresso::findOrFail($id);
-        $p->update($request->validate([
-            'user_id' => 'required|exists:users,id',
-            'peso_kg' => 'nullable',
-            'gordura_corporal_pct' => 'nullable',
-            'massa_muscular_kg' => 'nullable',
-            'observacoes' => 'nullable',
-            'avaliado_em' => 'required|date',
-        ]));
+        $p = $this->progressoDaAcademia()->findOrFail($id);
+        $p->update($this->validateProgresso($request));
 
-        return $p;
+        return $p->load('aluno');
     }
 
     public function destroy($id)
     {
-        Progresso::findOrFail($id)->delete();
+        $this->progressoDaAcademia()->findOrFail($id)->delete();
 
         return response()->json(['message' => 'Removido']);
+    }
+
+    private function validateProgresso(Request $request): array
+    {
+        return $request->validate([
+            'user_id' => [
+                'required',
+                Rule::exists('users', 'id')->where('academia_id', $this->academiaId()),
+            ],
+            'peso_kg' => 'nullable|numeric',
+            'gordura_corporal_pct' => 'nullable|numeric',
+            'massa_muscular_kg' => 'nullable|numeric',
+            'observacoes' => 'nullable|string',
+            'avaliado_em' => 'required|date',
+        ]);
+    }
+
+    private function progressoDaAcademia()
+    {
+        return Progresso::with('aluno')
+            ->where('academia_id', $this->academiaId());
     }
 }

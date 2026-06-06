@@ -5,17 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Frequencia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 
 class FrequenciaController extends Controller
 {
     public function index()
     {
-        return Frequencia::with('user')->get();
+        return Frequencia::with('user')
+            ->where('academia_id', $this->academiaId())
+            ->get();
     }
 
     public function show($id)
     {
-        return Frequencia::with('user')->findOrFail($id);
+        return $this->frequenciasDaAcademia()->findOrFail($id);
     }
 
     public function store(Request $request)
@@ -23,6 +26,7 @@ class FrequenciaController extends Controller
         $data = $this->validateFrequencia($request);
 
         return Frequencia::create([
+            'academia_id' => $this->academiaId(),
             'user_id' => $data['user_id'],
             'entrada' => isset($data['data']) ? Carbon::parse($data['data'])->startOfDay() : now(),
         ]);
@@ -31,7 +35,7 @@ class FrequenciaController extends Controller
     public function update(Request $request, $id)
     {
         $data = $this->validateFrequencia($request);
-        $frequencia = Frequencia::findOrFail($id);
+        $frequencia = $this->frequenciasDaAcademia()->findOrFail($id);
         $frequencia->update([
             'user_id' => $data['user_id'],
             'entrada' => isset($data['data']) ? Carbon::parse($data['data'])->startOfDay() : $frequencia->entrada,
@@ -42,7 +46,7 @@ class FrequenciaController extends Controller
 
     public function destroy($id)
     {
-        Frequencia::findOrFail($id)->delete();
+        $this->frequenciasDaAcademia()->findOrFail($id)->delete();
 
         return response()->json(['message' => 'ok']);
     }
@@ -50,8 +54,17 @@ class FrequenciaController extends Controller
     private function validateFrequencia(Request $request): array
     {
         return $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id' => [
+                'required',
+                Rule::exists('users', 'id')->where('academia_id', $this->academiaId()),
+            ],
             'data' => 'nullable|date',
         ]);
+    }
+
+    private function frequenciasDaAcademia()
+    {
+        return Frequencia::with('user')
+            ->where('academia_id', $this->academiaId());
     }
 }

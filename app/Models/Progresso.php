@@ -10,6 +10,7 @@ class Progresso extends Model
     protected $table = 'progresso';
 
     protected $fillable = [
+        'academia_id',
         'user_id',
         'professor_id',
         'peso_kg',
@@ -27,5 +28,10 @@ class Progresso extends Model
     public function professor()
     {
         return $this->belongsTo(User::class, 'professor_id');
+    }
+
+    public function academia()
+    {
+        return $this->belongsTo(Academia::class);
     }
 }

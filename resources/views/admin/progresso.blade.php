@@ -24,12 +24,98 @@
 @endsection
 @push('scripts')
 <script>
-function resetForm(){['progresso-id','progresso-aluno','progresso-peso','progresso-gordura','progresso-massa','progresso-data','progresso-obs'].forEach(id=>document.getElementById(id).value='');document.getElementById('progresso-modal-title').textContent='Novo Registro';}
-function fmtDate(d){if(!d)return'-';try{return new Date(d).toLocaleDateString('pt-BR')}catch{return d}}
-async function loadProgresso(){const data=await fetch('/api/progresso').then(r=>r.json()).catch(()=>[]);if(!Array.isArray(data))return;document.getElementById('table-progresso').innerHTML=data.map(p=>`<tr><td><strong>${p.aluno?p.aluno.name:'Aluno #'+p.user_id}</strong></td><td>${p.peso_kg?p.peso_kg+' kg':'-'}</td><td>${p.gordura_corporal_pct?p.gordura_corporal_pct+'%':'-'}</td><td>${p.massa_muscular_kg?p.massa_muscular_kg+' kg':'-'}</td><td>${fmtDate(p.avaliado_em)}</td><td><div class="d-flex gap-2"><button class="btn btn-gym-ghost btn-sm" onclick='editProgresso(${JSON.stringify(p)})'><i class="bi bi-pencil"></i></button><button class="btn btn-gym-danger btn-sm" onclick="delProgresso(${p.id})"><i class="bi bi-trash"></i></button></div></td></tr>`).join('')||'<tr><td colspan="6" class="text-center py-4">Nenhum registro</td></tr>';}
-function editProgresso(p){document.getElementById('progresso-id').value=p.id;document.getElementById('progresso-modal-title').textContent='Editar Registro';document.getElementById('progresso-aluno').value=p.aluno?p.aluno.name:'';document.getElementById('progresso-peso').value=p.peso_kg||'';document.getElementById('progresso-gordura').value=p.gordura_corporal_pct||'';document.getElementById('progresso-massa').value=p.massa_muscular_kg||'';document.getElementById('progresso-data').value=p.avaliado_em||'';document.getElementById('progresso-obs').value=p.observacoes||'';new bootstrap.Modal(document.getElementById('modalProgresso')).show();}
-async function saveProgresso(){const id=document.getElementById('progresso-id').value;const userId=alunoIdPorNome('progresso-aluno');if(!userId)return;const body={user_id:userId,peso_kg:document.getElementById('progresso-peso').value,gordura_corporal_pct:document.getElementById('progresso-gordura').value,massa_muscular_kg:document.getElementById('progresso-massa').value,avaliado_em:document.getElementById('progresso-data').value,observacoes:document.getElementById('progresso-obs').value};const r=await fetch('/api/progresso'+(id?'/'+id:''),{method:id?'PUT':'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content},body:JSON.stringify(body)});if(r.ok){bootstrap.Modal.getInstance(document.getElementById('modalProgresso')).hide();showToast('Salvo!');loadProgresso();}else showToast('Erro','error');}
-async function delProgresso(id){if(!confirm('Remover?'))return;const r=await fetch('/api/progresso/'+id,{method:'DELETE',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content}});if(r.ok){showToast('Removido!');loadProgresso();}}
+function resetForm() {
+    ['progresso-id','progresso-aluno','progresso-peso','progresso-gordura','progresso-massa','progresso-data','progresso-obs'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('progresso-data').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('progresso-modal-title').textContent = 'Novo Registro';
+}
+
+function fmtDate(d) {
+    if (!d) return '-';
+    try { return new Date(d).toLocaleDateString('pt-BR'); } catch { return d; }
+}
+
+function progressoErrorMessage(payload) {
+    if (payload?.errors) return Object.values(payload.errors).flat()[0] || 'Erro ao salvar.';
+    return payload?.message || 'Erro ao salvar.';
+}
+
+async function loadProgresso() {
+    const table = document.getElementById('table-progresso');
+    const response = await fetch('/api/progresso', { headers: { 'Accept': 'application/json' } }).catch(() => null);
+
+    if (!response || !response.ok) {
+        table.innerHTML = '<tr><td colspan="6" class="text-center py-4">Nao foi possivel carregar os registros</td></tr>';
+        return;
+    }
+
+    const data = await response.json().catch(() => []);
+    if (!Array.isArray(data)) return;
+
+    table.innerHTML = data.map(p => `<tr><td><strong>${p.aluno ? p.aluno.name : 'Aluno #' + p.user_id}</strong></td><td>${p.peso_kg ? p.peso_kg + ' kg' : '-'}</td><td>${p.gordura_corporal_pct ? p.gordura_corporal_pct + '%' : '-'}</td><td>${p.massa_muscular_kg ? p.massa_muscular_kg + ' kg' : '-'}</td><td>${fmtDate(p.avaliado_em)}</td><td><div class="d-flex gap-2"><button class="btn btn-gym-ghost btn-sm" onclick='editProgresso(${JSON.stringify(p)})'><i class="bi bi-pencil"></i></button><button class="btn btn-gym-danger btn-sm" onclick="delProgresso(${p.id})"><i class="bi bi-trash"></i></button></div></td></tr>`).join('') || '<tr><td colspan="6" class="text-center py-4">Nenhum registro</td></tr>';
+}
+
+function editProgresso(p) {
+    document.getElementById('progresso-id').value = p.id;
+    document.getElementById('progresso-modal-title').textContent = 'Editar Registro';
+    document.getElementById('progresso-aluno').value = p.aluno ? p.aluno.name : '';
+    document.getElementById('progresso-peso').value = p.peso_kg || '';
+    document.getElementById('progresso-gordura').value = p.gordura_corporal_pct || '';
+    document.getElementById('progresso-massa').value = p.massa_muscular_kg || '';
+    document.getElementById('progresso-data').value = p.avaliado_em || '';
+    document.getElementById('progresso-obs').value = p.observacoes || '';
+    new bootstrap.Modal(document.getElementById('modalProgresso')).show();
+}
+
+async function saveProgresso() {
+    const id = document.getElementById('progresso-id').value;
+    const userId = alunoIdPorNome('progresso-aluno');
+    if (!userId) return;
+
+    const body = {
+        user_id: userId,
+        peso_kg: document.getElementById('progresso-peso').value,
+        gordura_corporal_pct: document.getElementById('progresso-gordura').value,
+        massa_muscular_kg: document.getElementById('progresso-massa').value,
+        avaliado_em: document.getElementById('progresso-data').value,
+        observacoes: document.getElementById('progresso-obs').value
+    };
+
+    const response = await fetch('/api/progresso' + (id ? '/' + id : ''), {
+        method: id ? 'PUT' : 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+        },
+        body: JSON.stringify(body)
+    }).catch(() => null);
+
+    const payload = await response?.json().catch(() => null);
+    if (!response || !response.ok || payload?.ok === false) {
+        showToast(progressoErrorMessage(payload), 'error');
+        return;
+    }
+
+    bootstrap.Modal.getInstance(document.getElementById('modalProgresso')).hide();
+    showToast('Salvo!');
+    await loadProgresso();
+}
+
+async function delProgresso(id) {
+    if (!confirm('Remover?')) return;
+    const r = await fetch('/api/progresso/' + id, {
+        method: 'DELETE',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+        }
+    });
+    if (r.ok) {
+        showToast('Removido!');
+        loadProgresso();
+    }
+}
 loadProgresso();
 </script>
 @endpush

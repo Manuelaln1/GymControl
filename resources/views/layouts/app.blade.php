@@ -89,6 +89,10 @@
         }
         .user-name { font-size: 13px; font-weight: 600; color: var(--gym-text); }
         .user-role { font-size: 11px; color: var(--gym-muted); }
+        .academy-box { margin: 14px 18px 4px; padding: 12px; background: rgba(200,241,53,.08); border: 1px solid rgba(200,241,53,.18); border-radius: 8px; }
+        .academy-label { font-size: 10px; font-weight: 700; color: var(--gym-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+        .academy-name { font-size: 14px; font-weight: 700; color: var(--gym-accent); line-height: 1.2; word-break: break-word; }
+        .logout-button { margin-left: auto; width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
 
         /* ── TOPBAR ── */
         #topbar {
@@ -240,6 +244,13 @@
         <span class="logo-name">Gym<span>Control</span></span>
     </a>
 
+    @auth
+        <div class="academy-box">
+            <div class="academy-label">Academia</div>
+            <div class="academy-name">{{ auth()->user()->academia->nome ?? 'Academia sem nome' }}</div>
+        </div>
+    @endauth
+
     <div class="overflow-auto flex-grow-1">
         <div class="sidebar-section">Principal</div>
         <a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
@@ -268,11 +279,17 @@
     </div>
 
     <div class="sidebar-footer">
-        <div class="user-avatar">AD</div>
+        <div class="user-avatar">{{ strtoupper(substr(auth()->user()->name ?? 'AD', 0, 2)) }}</div>
         <div>
-            <div class="user-name">Admin</div>
-            <div class="user-role">Administrador</div>
+            <div class="user-name">{{ auth()->user()->name ?? 'Admin' }}</div>
+            <div class="user-role">{{ ucfirst(auth()->user()->tipo ?? 'Administrador') }}</div>
         </div>
+        <form method="POST" action="{{ route('logout') }}" class="ms-auto">
+            @csrf
+            <button type="submit" class="btn btn-gym-ghost btn-sm logout-button" title="Sair">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+        </form>
     </div>
 </nav>
 
@@ -282,6 +299,11 @@
         <i class="bi bi-list fs-5"></i>
     </button>
     <span class="topbar-title">@yield('page-title', 'Dashboard')</span>
+    @auth
+        <span class="gym-badge badge-accent d-none d-md-inline-flex">
+            <i class="bi bi-building"></i> {{ auth()->user()->academia->nome ?? 'Academia' }}
+        </span>
+    @endauth
     <div class="topbar-search">
         <i class="bi bi-search"></i>
         <input type="text" placeholder="Buscar..." id="global-search">

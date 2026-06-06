@@ -142,8 +142,8 @@
                 <a href="#recursos" class="nav-link-gym nav-link">Recursos</a>
                 <a href="#planos" class="nav-link-gym nav-link">Planos</a>
                 <a href="#contato" class="nav-link-gym nav-link">Contato</a>
-                <a href="{{ route('admin.dashboard') }}" class="btn-nav-admin ms-2">
-                    <i class="bi bi-grid-fill"></i> Painel Admin
+                <a href="{{ auth()->check() ? route('admin.dashboard') : route('login') }}" class="btn-nav-admin ms-2">
+                    <i class="bi bi-grid-fill"></i> {{ auth()->check() ? 'Painel Admin' : 'Entrar' }}
                 </a>
             </div>
         </div>
@@ -169,8 +169,8 @@
                     Controle alunos, treinos, matrículas, progresso e frequência em um único painel. Tudo integrado, simples e rápido.
                 </p>
                 <div class="d-flex flex-wrap gap-3">
-                    <a href="{{ route('admin.dashboard') }}" class="btn-hero-primary">
-                        <i class="bi bi-grid-fill"></i> Acessar Painel
+                    <a href="{{ auth()->check() ? route('admin.dashboard') : route('register') }}" class="btn-hero-primary">
+                        <i class="bi bi-building-add"></i> Cadastrar Academia
                     </a>
                     <a href="#recursos" class="btn-hero-ghost">
                         <i class="bi bi-play-circle"></i> Ver Recursos
@@ -318,8 +318,8 @@
         <div class="section-tag">Comece agora</div>
         <h2 class="section-title">PRONTO PARA <span>GERENCIAR</span><br>SUA ACADEMIA?</h2>
         <p class="section-desc mx-auto mb-4" style="text-align:center">Acesse o painel administrativo e comece a cadastrar seus alunos, planos e treinos agora mesmo.</p>
-        <a href="{{ route('admin.dashboard') }}" class="btn-hero-primary">
-            <i class="bi bi-grid-fill"></i> Acessar o Painel Admin
+        <a href="{{ auth()->check() ? route('admin.dashboard') : route('register') }}" class="btn-hero-primary">
+            <i class="bi bi-building-add"></i> Cadastrar Academia
         </a>
     </div>
 </section>
@@ -334,7 +334,7 @@
             </div>
             <div class="col-6 col-lg-2">
                 <div class="footer-heading">Sistema</div>
-                <a href="{{ route('admin.dashboard') }}" class="footer-link">Dashboard</a>
+                <a href="{{ auth()->check() ? route('admin.dashboard') : route('login') }}" class="footer-link">Dashboard</a>
                 <a href="{{ route('admin.matriculas.index') }}" class="footer-link">Alunos</a>
                 <a href="{{ route('admin.treinos.index') }}" class="footer-link">Treinos</a>
                 <a href="{{ route('admin.planos.index') }}" class="footer-link">Planos</a>

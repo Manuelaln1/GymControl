@@ -10,6 +10,7 @@ class User extends Authenticatable
     use Notifiable;
 
     protected $fillable = [
+        'academia_id',
         'name',
         'email',
         'password',
@@ -48,5 +49,10 @@ class User extends Authenticatable
     public function frequencias()
     {
         return $this->hasMany(Frequencia::class);
+    }
+
+    public function academia()
+    {
+        return $this->belongsTo(Academia::class);
     }
 }

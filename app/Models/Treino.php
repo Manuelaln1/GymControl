@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Treino extends Model
 {
     protected $fillable = [
+        'academia_id',
         'user_id',
         'nome',
         'objetivo',
@@ -21,5 +22,8 @@ class Treino extends Model
         return $this->belongsTo(User::class);
     }
 
-
+    public function academia()
+    {
+        return $this->belongsTo(Academia::class);
+    }
 }

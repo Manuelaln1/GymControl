@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Matricula extends Model
 {
     protected $fillable = [
+        'academia_id',
         'user_id',
         'plano_id',
         'data_inicio',
@@ -22,5 +23,10 @@ class Matricula extends Model
     public function plano()
     {
         return $this->belongsTo(Plano::class);
+    }
+
+    public function academia()
+    {
+        return $this->belongsTo(Academia::class);
     }
 }
